@@ -1,4 +1,5 @@
 from package import Package
+from distance import get_shortest_path
 import distance
 
 packages_list = Package().hash_table
@@ -34,8 +35,8 @@ counter = 0
 # O(n^2), links truck list with list of addresses
 for j in truck1_packages:
     for k in distance.get_address():
-        if j[2] == k[2]:
-            truck1_distances.append(j[0])
+        if j[1] == k[2]:
+            truck1_distances.append(int(k[0]))
             truck1_packages[counter][1] = k[0]
     counter += 1
 
@@ -43,8 +44,8 @@ counter = 0
 # O(n^2), links truck list with list of addresses
 for j in truck2_packages:
     for k in distance.get_address():
-        if j[2] == k[2]:
-            truck2_distances.append(j[0])
+        if j[1] == k[2]:
+            truck2_distances.append(int(k[0]))
             truck2_packages[counter][1] = k[0]
     counter += 1
 
@@ -52,10 +53,14 @@ counter = 0
 # O(n^2), links truck list with list of addresses
 for j in truck3_packages:
     for k in distance.get_address():
-        if j[2] == k[2]:
-            truck3_distances.append(j[0])
+        if j[1] == k[2]:
+            truck3_distances.append(k[0])
             truck3_packages[counter][1] = k[0]
     counter += 1
+
+get_shortest_path(truck1_distances, 1, 0)
+get_shortest_path(truck2_distances, 2, 0)
+get_shortest_path(truck3_distances, 3, 0)
 
 
 # O(1)
