@@ -1,4 +1,3 @@
-
 class HashTable:
     def __init__(self, capacity=10):
         self.table = [None] * capacity
@@ -7,7 +6,7 @@ class HashTable:
     def _get_hash(self, key):
         return int(key) % len(self.table)
 
-    # Add packages to hash table, O(n)
+    # Add key/value pairs to hash table, O(n)
     def add(self, key, value):
         key_hash = self._get_hash(key)
         key_value = [key, value]
@@ -16,6 +15,7 @@ class HashTable:
             self.table[key_hash] = list([key_value])
             return True
         else:
+            # Updates key/value or appends to slot list
             for pair in self.table[key_hash]:
                 if pair[0] == key:
                     pair[1] = value
