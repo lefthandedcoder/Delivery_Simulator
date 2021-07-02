@@ -1,92 +1,321 @@
-from package import get_truck1_packages
-from package import get_truck2_packages
-from package import get_truck3_packages
-from distance import get_shortest_path
-from distance import get_greedy_truck1_distances
-from distance import get_greedy_truck2_distances
-from distance import get_greedy_truck3_distances
 import distance
-
-truck1_packages = get_truck1_packages()
-truck2_packages = get_truck2_packages()
-truck3_packages = get_truck3_packages()
-truck1_distances = []
-truck2_distances = []
-truck3_distances = []
-
-counter = 0
-# O(n^2), links truck list with list of addresses
-for address in truck1_packages:
-    for address_number in distance.get_address():
-        if address[1] == address_number[2]:
-            truck1_distances.append(address_number[0])
-            truck1_packages[counter][1] = address_number[0]
-    counter += 1
-
-counter = 0
-# O(n^2), links truck list with list of addresses
-for address in truck2_packages:
-    for address_number in distance.get_address():
-        if address[1] == address_number[2]:
-            truck2_distances.append(address_number[0])
-            truck2_packages[counter][1] = address_number[0]
-    counter += 1
-
-counter = 0
-# O(n^2), links truck list with list of addresses
-for address in truck3_packages:
-    for address_number in distance.get_address():
-        if address[1] == address_number[2]:
-            truck3_distances.append(address_number[0])
-            truck3_packages[counter][1] = address_number[0]
-    counter += 1
-
-get_shortest_path(truck1_packages, 1, 0)
-get_shortest_path(truck2_packages, 2, 0)
-get_shortest_path(truck3_packages, 3, 0)
+import package
+import datetime
 
 
-def get_truck1_distance():
-    temp_distance = 0
-    for i in range(len(get_greedy_truck1_distances())):
+class Truck:
+    def __init__(self):
+        self.depart_time = []
+        self.status = 'At hub'
+        self.package_list = []
+        self.route = []
+        self.optimized_route = []
+        self.current_distance = 0
+        self.total_distance = 0
+        self.distance_list = []
+        self.time = 0  # Will track based on speed and distance and add from departure time
+        self.current_location = 0
+
+truck1 = Truck()
+truck2 = Truck()
+truck3 = Truck()
+truck1.depart_time = datetime.timedelta(hours=8, minutes=0, seconds=0)
+truck2.depart_time = datetime.timedelta(hours=9, minutes=5, seconds=0)
+truck3.depart_time = datetime.timedelta(hours=10, minutes=30, seconds=0)
+
+
+# Load trucks
+def load_trucks():
+    # O(n) loops through all packages and sorts into different trucks based on constraints
+    for item in range(1, (package.get_total_packages())):
+        value = package.get_all_packages().get(int(item))
+        if 'EOD' not in value[5]:
+            if 'Must' in value[8] or 'None' in value[8]:
+                value[9] = truck1.depart_time
+                truck1.package_list.append(value)
+        if 'Can only be' in value[8] or 'Delayed' in value[8]:
+            value[9] = truck2.depart_time
+            truck2.package_list.append(value)
+        if 'Address updated' in value[8]:
+            value[9] = truck3.depart_time
+            truck3.package_list.append(value)
+        if value not in truck1.package_list and value not in truck2.package_list:
+            if len(truck2.package_list) < len(truck3.package_list):
+                value[9] = truck2.depart_time
+                truck2.package_list.append(value)
+            else:
+                value[9] = truck3.depart_time
+                truck3.package_list.append(value)
+
+
+def get_route(package_list, route):
+    for route_packages in package_list:
+        route_address = route_packages[1]
+        route_address_id = distance.get_all_addresses().get(str(route_address))[0]
+        route.append([route_packages[0], route_address_id])
+
+
+def get_shortest_path(route, optimized_route, start):
+    if len(route) == 0:
+        return route
+
+    lowest_distance = 999.9
+    location = 0
+
+    for destination in route:
+        next_stop = int(destination[1])
         try:
-            temp_distance = distance.get_total_distance(int(get_greedy_truck1_distances()[i]),
-                                                        int(get_greedy_truck1_distances()[i + 1]),
-                                                        temp_distance)
+            temp_distance = distance.get_all_distances().get(start)[next_stop][1]
+        except IndexError:
+            temp_distance = distance.get_all_distances().get(next_stop)[start][1]
+            pass
+        if float(temp_distance) <= float(lowest_distance):
+            lowest_distance = temp_distance
+            location = next_stop
+
+    for destination in route:
+        next_stop = int(destination[1])
+        try:
+            temp_distance = distance.get_all_distances().get(start)[next_stop][1]
+        except IndexError:
+            temp_distance = distance.get_all_distances().get(next_stop)[start][1]
+            pass
+        if float(temp_distance) == float(lowest_distance):
+            route.remove(destination)
+            optimized_route.append(destination)
+            current_location = location
+            get_shortest_path(route, optimized_route, current_location)
+
+
+def get_distance(optimized_route, distance_list):
+    last_temp = 0
+    new_temp = 0
+    optimized_route.insert(0, [0, '0'])
+    optimized_route.append([0, '0'])
+    temp = float(distance.get_all_distances().get(int(optimized_route[0][1]))[0][1])
+    for index in range(0, len(optimized_route)):
+        try:
+            start = optimized_route[index][1]
+            end = optimized_route[index + 1][1]
+            try:
+                new_temp += float(distance.get_all_distances().get(int(start))[int(end)][1])
+                distance_list.append([optimized_route[index][0], last_temp])
+                last_temp = new_temp
+            except IndexError:
+                new_temp += float(distance.get_all_distances().get(int(end))[int(start)][1])
+                distance_list.append([optimized_route[index][0], last_temp])
+                last_temp = new_temp
+                pass
         except IndexError:
             pass
-    temp_distance += distance.distance_to_hub(
-        (int(get_greedy_truck1_distances()[len(get_greedy_truck1_distances()) - 1])))
-    return temp_distance
+    distance_list.append([0, last_temp])
+    return last_temp
+
+def get_time(depart_time, current_distance):
+    new_time = current_distance / 18  # minutes per mile
+    time_hour_minutes = '{0:02.0f}:{1:02.0f}'.format(
+            *divmod(new_time * 60, 60)) + ':00'
+    (hrs, mins, secs) = time_hour_minutes.split(':')
+    add_time = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+    current_time = depart_time + add_time
+    return current_time
 
 
-def get_truck2_distance():
-    temp_distance = 0
-    for i in range(len(get_greedy_truck2_distances())):
+def get_delivered_list(distance_list, depart_time, package_list):
+    for obj in range(0, (len(distance_list) - 1)):
+        deliver_time = get_time(depart_time, distance_list[(obj + 1)][1])
+        list_id = distance_list[(obj + 1)][0]
+        for item in range(0, len(package_list)):
+            package_id = package_list[item][0]
+            if list_id == package_id:
+                package_list[item][10] = deliver_time
+                package_list[item][7] = 'Delivered'
+                deadline = package_list[item][5]
+                if deadline == 'EOD':
+                    deadline = '17:00:00'
+                elif deadline == '10:30 AM':
+                    deadline = '10:30:00'
+                elif deadline == '9:00 AM':
+                    deadline = '09:00:00'
+                (hrs, mins, secs) = deadline.split(':')
+                deadline_time = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+                if deliver_time <= deadline_time:
+                    package_list[item][11] = 'On time'
+                else:
+                    package_list[item][11] = 'Delayed'
+
+
+load_trucks()
+get_route(truck1.package_list, truck1.route)
+get_shortest_path(truck1.route, truck1.optimized_route, 0)
+truck1.total_distance = get_distance(truck1.optimized_route, truck1.distance_list)
+get_route(truck2.package_list, truck2.route)
+get_shortest_path(truck2.route, truck2.optimized_route, 0)
+truck2.total_distance = get_distance(truck2.optimized_route, truck2.distance_list)
+get_route(truck3.package_list, truck3.route)
+get_shortest_path(truck3.route, truck3.optimized_route, 0)
+truck3.total_distance = get_distance(truck3.optimized_route, truck3.distance_list)
+get_delivered_list(truck1.distance_list, truck1.depart_time, truck1.package_list)
+get_delivered_list(truck2.distance_list, truck2.depart_time, truck2.package_list)
+get_delivered_list(truck3.distance_list, truck3.depart_time, truck3.package_list)
+print(get_distance(truck1.optimized_route, truck1.distance_list))
+print(get_time(truck1.depart_time, truck1.total_distance))
+
+def get_status():
+    user_time = input('Enter a time (HH:MM) after 08:00:00. \n'
+                      'For example, 9 AM is 9:00:00, and 1 PM is 13:00:00. \n'
+                      'Time: ')
+    (hrs, mins, secs) = user_time.split(':')
+    delta_user = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+    # Notifies user of known address change
+    swap_time = '10:20:00'
+    (hrs, mins, secs) = swap_time.split(':')
+    swap_delta = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+    if delta_user >= swap_delta:
+        print('Address changed for package 9! New address is: ' + package.get_all_packages().get(9)[1] + '\n')
+    print('The time is ' + str(delta_user) + '\n')
+
+    truck1_return = get_time(truck1.depart_time, truck1.total_distance)
+    truck2_return = get_time(truck2.depart_time, truck2.total_distance)
+    truck3_return = get_time(truck2.depart_time, truck2.total_distance)
+
+    if delta_user >= truck1_return:
+        print('Truck 1 has finished its route and returned to the hub at ' + str(truck1_return))
+        print('Total distance traveled is ' + str(round(truck1.total_distance)))
+    else:
+        print('Truck 1 has not finished its route.')
+    if delta_user >= truck2_return:
+        print('Truck 2 has finished its route and returned to the hub at ' + str(truck2_return))
+        print('Total distance traveled is ' + str(round(truck2.total_distance)))
+    else:
+        print('Truck 2 has not finished its route.')
+    if delta_user >= truck3_return:
+        print('Truck 3 has finished its route and returned to the hub at ' + str(truck3_return))
+        print('Total distance traveled is ' + str(round(truck3.total_distance)))
+    else:
+        print('Truck 3 has not finished its route.')
+    if delta_user >= truck1_return and delta_user >= truck2_return and delta_user >= truck3_return:
+        print('The total distance of all trucks traveled is '
+              + str(round(truck1.total_distance + truck2.total_distance + truck3.total_distance)) + '\n')
+    get_menu(delta_user)
+
+
+def get_menu(delta_user):
+    menu_selection = input('Select from the following: \n'
+                           '1: Look Up Package ID \n'
+                           '2: Print All Packages \n'
+                           '3: Select New Time \n'
+                           'Exit: End Program \n'
+                           'Enter Option: ')
+    if menu_selection == '1':
+        package_id = int(input('Enter a Package ID: '))
         try:
-            temp_distance = distance.get_total_distance(int(get_greedy_truck2_distances()[i]),
-                                                        int(get_greedy_truck2_distances()[i + 1]),
-                                                        temp_distance)
+            if package_id in range(1, (package.get_total_packages() + 1)):
+                item = package_id
+                for obj in range(0, len(truck1.package_list)):
+                    if package.get_all_packages().get(int(item))[0] == truck1.package_list[obj][1]:
+                        package.get_all_packages().get(int(item))[9] = truck1.package_list[obj][9]
+                        package.get_all_packages().get(int(item))[10] = truck1.package_list[obj][10]
+                        package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                for obj in range(0, len(truck2.package_list)):
+                    if package.get_all_packages().get(int(item))[0] == truck2.package_list[obj][1]:
+                        package.get_all_packages().get(int(item))[9] = truck2.package_list[obj][9]
+                        package.get_all_packages().get(int(item))[10] = truck2.package_list[obj][10]
+                        package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                for obj in range(0, len(truck3.package_list)):
+                    if package.get_all_packages().get(int(item))[0] == truck3.package_list[obj][1]:
+                        package.get_all_packages().get(int(item))[9] = truck3.package_list[obj][9]
+                        package.get_all_packages().get(int(item))[10] = truck3.package_list[obj][10]
+                        package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                depart_time = package.get_all_packages().get(int(item))[9]
+                if depart_time >= delta_user:
+                    package.get_all_packages().get(int(item))[7] = 'At hub'
+                    package.get_all_packages().get(int(item))[10] = 'TBD'
+
+                    print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                          + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                          + ' Leaving at: ' + str(package.get_all_packages().get(int(item))[9]))
+                elif depart_time <= delta_user:
+                    package.get_all_packages().get(int(item))[7] = 'En route'
+                    package.get_all_packages().get(int(item))[10] = 'TBD'
+
+                    print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                          + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                          + ' Left at: ' + str(package.get_all_packages().get(int(item))[9]))
+                else:
+                    package.get_all_packages().get(str(item))[7] = 'Delivered'
+
+                    print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                          + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                          + ' Left at: ' + str(package.get_all_packages().get(int(item))[9])
+                          + ' Arrived at: ' + str(package.get_all_packages().get(int(item))[10])
+                          + ' On Time?: ' + str(package.get_all_packages().get(int(item))[11]))
+            else:
+                print('Package ID not found!')
+        except ValueError:
+            print('Invalid entry!')
+            exit()
+        get_menu(delta_user)
+    if menu_selection == '2':
+        try:
+            for item in range(1, (package.get_total_packages() + 2)):
+                if package.get_all_packages().get(item) is not None:
+                    for obj in range(1, len(truck1.package_list)):
+                        if package.get_all_packages().get(int(item))[0] == truck1.package_list[obj][1]:
+                            package.get_all_packages().get(int(item))[9] = truck1.package_list[obj][9]
+                            package.get_all_packages().get(int(item))[10] = truck1.package_list[obj][10]
+                            package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                    for obj in range(1, len(truck2.package_list)):
+                        if package.get_all_packages().get(int(item))[0] == truck2.package_list[obj][1]:
+                            package.get_all_packages().get(int(item))[9] = truck2.package_list[obj][9]
+                            package.get_all_packages().get(int(item))[10] = truck2.package_list[obj][10]
+                            package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                    for obj in range(1, len(truck3.package_list)):
+                        if package.get_all_packages().get(int(item))[0] == truck3.package_list[obj][1]:
+                            package.get_all_packages().get(int(item))[9] = truck3.package_list[obj][9]
+                            package.get_all_packages().get(int(item))[10] = truck3.package_list[obj][10]
+                            package.get_all_packages().get(int(item))[11] = truck1.package_list[obj][11]
+                    depart_time = package.get_all_packages().get(int(item))[9]
+                    if depart_time > delta_user:
+                        package.get_all_packages().get(int(item))[7] = 'At hub'
+                        package.get_all_packages().get(int(item))[10] = 'TBD'
+
+                        print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                              + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                              + ' Leaving at: ' + str(package.get_all_packages().get(int(item))[9]))
+
+                    elif depart_time < delta_user:
+                        package.get_all_packages().get(int(item))[7] = 'En route'
+                        package.get_all_packages().get(int(item))[10] = 'TBD'
+
+                        print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                              + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                              + ' Left at: ' + str(package.get_all_packages().get(int(item))[9])
+                              + ' Arriving at: ' + str(package.get_all_packages().get(int(item))[10]))
+
+                    elif delta_user >= package.get_all_packages().get(int(item))[10]:
+                        package.get_all_packages().get(str(item))[7] = 'Delivered'
+
+                        print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
+                              + ' Delivery Status: ' + str(package.get_all_packages().get(int(item))[7])
+                              + ' Left at: ' + str(package.get_all_packages().get(int(item))[9])
+                              + ' Arrived at: ' + str(package.get_all_packages().get(int(item))[10])
+                              + ' On Time?: ' + str(package.get_all_packages().get(int(item))[11]))
         except IndexError:
             pass
-    temp_distance += distance.distance_to_hub(
-        (int(get_greedy_truck2_distances()[len(get_greedy_truck2_distances()) - 1])))
-    return temp_distance
+        continue_input = int(input('Continue? (Type 1 or 2) \n'
+                                   '1 : Continue Program \n'
+                                   '2 : Exit Program \n'))
+        if continue_input == 1:
+            get_status()
+        else:
+            print('Thank you for using the WGUPS Delivery Simulator. Goodbye!')
+            exit()
+        get_menu(delta_user)
+    if menu_selection == '3':
+        get_status()
+    if menu_selection == 'Exit':
+        print('Thank you for using the WGUPS Delivery Simulator. Goodbye!')
+        exit()
 
-
-def get_truck3_distance():
-    temp_distance = 0
-    for i in range(len(get_greedy_truck3_distances())):
-        try:
-            temp_distance = distance.get_total_distance(int(get_greedy_truck3_distances()[i]),
-                                                        int(get_greedy_truck3_distances()[i + 1]),
-                                                        temp_distance)
-        except IndexError:
-            pass
-    temp_distance += distance.distance_to_hub(
-        (int(get_greedy_truck3_distances()[len(get_greedy_truck3_distances()) - 1])))
-    return temp_distance
-
-
-def get_distance_all_trucks():
-    return float(get_truck1_distance() + get_truck2_distance() + get_truck3_distance())
+get_status()
