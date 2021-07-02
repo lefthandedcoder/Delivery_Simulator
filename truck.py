@@ -165,45 +165,49 @@ def get_delivered_list(distance_list, depart_time, package_list):
 
 
 def get_status():
-    user_time = input('Enter a time (HH:MM:SS) after 8:00:00. \n'
-                      'For example, 9 AM is 9:00:00, and 1 PM is 13:00:00. \n'
-                      'Time: ')
-    (hrs, mins, secs) = user_time.split(':')
-    delta_user = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
-    # Notifies user of known address change
-    swap_time = '10:20:00'
-    (hrs, mins, secs) = swap_time.split(':')
-    swap_delta = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
-    if delta_user >= swap_delta:
-        print('Address changed for package 9! New address is: ' + package.get_all_packages().get(9)[1] + '\n')
-    print('The time is ' + str(delta_user) + '\n')
-    truck1_return = get_time(truck1.depart_time, truck1.total_distance)
-    truck2_return = get_time(truck2.depart_time, truck2.total_distance)
-    truck3_return = get_time(truck3.depart_time, truck3.total_distance)
+    try:
+        user_time = input('Enter a time (HH:MM:SS) after 8:00:00. \n'
+                          'For example, 9 AM is 9:00:00, and 1 PM is 13:00:00. \n'
+                          'Time: ')
+        (hrs, mins, secs) = user_time.split(':')
+        delta_user = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+        # Notifies user of known address change
+        swap_time = '10:20:00'
+        (hrs, mins, secs) = swap_time.split(':')
+        swap_delta = datetime.timedelta(hours=int(hrs), minutes=int(mins), seconds=int(secs))
+        if delta_user >= swap_delta:
+            print('Address changed for package 9! New address is: ' + package.get_all_packages().get(9)[1] + '\n')
+        print('The time is ' + str(delta_user) + '\n')
+        truck1_return = get_time(truck1.depart_time, truck1.total_distance)
+        truck2_return = get_time(truck2.depart_time, truck2.total_distance)
+        truck3_return = get_time(truck3.depart_time, truck3.total_distance)
 
-    if delta_user >= truck1_return:
-        print('Truck 1 has finished its route and returned to the hub at ' + str(truck1_return) + '.')
-        print('Total distance traveled is ' + str(round(truck1.total_distance)) + ' miles.')
-    else:
-        print('Truck 1 has not finished its route.')
-    if delta_user >= truck2_return:
-        print('Truck 2 has finished its route and returned to the hub at ' + str(truck2_return) + '.')
-        print('Total distance traveled is ' + str(round(truck2.total_distance)) + ' miles.')
-    else:
-        print('Truck 2 has not finished its route.')
-    if delta_user >= truck3_return:
-        print('Truck 3 has finished its route and returned to the hub at ' + str(truck3_return) + '.')
-        print('Total distance traveled is ' + str(round(truck3.total_distance)) + ' miles.')
-    else:
-        print('Truck 3 has not finished its route. \n')
-    if delta_user >= truck1_return and delta_user >= truck2_return and delta_user >= truck3_return:
-        print('The total distance of all trucks traveled is '
-              + str(round(truck1.total_distance + truck2.total_distance + truck3.total_distance)) + ' miles.\n')
-    get_menu(delta_user)
+        if delta_user >= truck1_return:
+            print('Truck 1 has finished its route and returned to the hub at ' + str(truck1_return) + '.')
+            print('Total distance traveled is ' + str(round(truck1.total_distance)) + ' miles.')
+        else:
+            print('Truck 1 has not finished its route.')
+        if delta_user >= truck2_return:
+            print('Truck 2 has finished its route and returned to the hub at ' + str(truck2_return) + '.')
+            print('Total distance traveled is ' + str(round(truck2.total_distance)) + ' miles.')
+        else:
+            print('Truck 2 has not finished its route.')
+        if delta_user >= truck3_return:
+            print('Truck 3 has finished its route and returned to the hub at ' + str(truck3_return) + '.')
+            print('Total distance traveled is ' + str(round(truck3.total_distance)) + ' miles.')
+        else:
+            print('Truck 3 has not finished its route. \n')
+        if delta_user >= truck1_return and delta_user >= truck2_return and delta_user >= truck3_return:
+            print('The total distance of all trucks traveled is '
+                  + str(round(truck1.total_distance + truck2.total_distance + truck3.total_distance)) + ' miles.\n')
+        get_menu(delta_user)
+    except ValueError:
+        print('Invalid entry! Goodbye!')
+        exit()
 
 
 def get_menu(delta_user):
-    menu_selection = input('Select from the following: \n'
+    menu_selection = input('\nSelect from the following: \n'
                            '1: Look Up Package ID \n'
                            '2: Print All Packages \n'
                            '3: Select New Time \n'
@@ -246,7 +250,7 @@ def get_menu(delta_user):
                           + '   | Leaving at: ' + str(package.get_all_packages().get(int(item))[9]))
                 elif depart_time < delta_user:
                     if deliver_time <= delta_user:
-                        package.get_all_packages().get(int(item))[7] = 'Delivered by Truck' + str(
+                        package.get_all_packages().get(int(item))[7] = 'Delivered by Truck ' + str(
                             package.get_all_packages().get(int(item))[12])
 
                         print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
@@ -255,7 +259,7 @@ def get_menu(delta_user):
                               + '   | Arrived at: ' + str(package.get_all_packages().get(int(item))[10])
                               + '   | On Time?: ' + str(package.get_all_packages().get(int(item))[11]))
                     else:
-                        package.get_all_packages().get(int(item))[7] = 'En route on Truck' + str(
+                        package.get_all_packages().get(int(item))[7] = 'En route on Truck ' + str(
                             package.get_all_packages().get(int(item))[12])
 
                         print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
@@ -266,9 +270,10 @@ def get_menu(delta_user):
         except ValueError:
             print('Invalid entry!')
             exit()
-        continue_input = int(input('Continue? (Type 1 or 2) \n'
-                                   '1 : Continue Program \n'
-                                   '2 : Exit Program \n'))
+        continue_input = int(input('\nThe time is ' + str(delta_user)
+                                   + '. \nContinue? (Type 1 or 2) \n'
+                                     '1 : Continue Program \n'
+                                     '2 : Exit Program \n'))
         if continue_input == 1:
             get_status()
     if menu_selection == '2':
@@ -316,7 +321,7 @@ def get_menu(delta_user):
                           + '   | Leaving at: ' + str(package.get_all_packages().get(int(item))[9]))
                 elif depart_time < delta_user:
                     if deliver_time <= delta_user:
-                        package.get_all_packages().get(int(item))[7] = 'Delivered by Truck' + str(
+                        package.get_all_packages().get(int(item))[7] = 'Delivered by Truck ' + str(
                             package.get_all_packages().get(int(item))[12])
 
                         print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
@@ -325,7 +330,7 @@ def get_menu(delta_user):
                               + '   | Arrived at: ' + str(package.get_all_packages().get(int(item))[10])
                               + '   | On Time?: ' + str(package.get_all_packages().get(int(item))[11]))
                     else:
-                        package.get_all_packages().get(int(item))[7] = 'En route on Truck' + str(
+                        package.get_all_packages().get(int(item))[7] = 'En route on Truck ' + str(
                             package.get_all_packages().get(int(item))[12])
 
                         print('Package ID: ' + str(package.get_all_packages().get(int(item))[0])
@@ -333,7 +338,8 @@ def get_menu(delta_user):
                               + '   | Left at: ' + str(package.get_all_packages().get(int(item))[9]))
         except IndexError:
             pass
-        continue_input = int(input('Continue? (Type 1 or 2) \n'
+        continue_input = int(input('\nThe time is ' + str(delta_user)
+                                   + '. \nContinue? (Type 1 or 2) \n'
                                    '1 : Continue Program \n'
                                    '2 : Exit Program \n'))
         if continue_input == 1:
