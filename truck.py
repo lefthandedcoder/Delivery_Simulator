@@ -25,6 +25,18 @@ truck2.depart_time = datetime.timedelta(hours=9, minutes=5, seconds=0)
 truck3.depart_time = datetime.timedelta(hours=10, minutes=30, seconds=0)
 
 
+def get_truck1():
+    return truck1
+
+
+def get_truck2():
+    return truck2
+
+
+def get_truck3():
+    return truck3
+
+
 # Load trucks
 def load_trucks():
     # O(n) loops through all packages and sorts into different trucks based on constraints
@@ -152,23 +164,7 @@ def get_delivered_list(distance_list, depart_time, package_list):
                     package_list[item][11] = 'Delayed'
 
 
-load_trucks()
-get_route(truck1.package_list, truck1.route)
-get_shortest_path(truck1.route, truck1.optimized_route, 0)
-truck1.total_distance = get_distance(truck1.optimized_route, truck1.distance_list)
-get_route(truck2.package_list, truck2.route)
-get_shortest_path(truck2.route, truck2.optimized_route, 0)
-truck2.total_distance = get_distance(truck2.optimized_route, truck2.distance_list)
-get_route(truck3.package_list, truck3.route)
-get_shortest_path(truck3.route, truck3.optimized_route, 0)
-truck3.total_distance = get_distance(truck3.optimized_route, truck3.distance_list)
-get_delivered_list(truck1.distance_list, truck1.depart_time, truck1.package_list)
-get_delivered_list(truck2.distance_list, truck2.depart_time, truck2.package_list)
-get_delivered_list(truck3.distance_list, truck3.depart_time, truck3.package_list)
-
-
 def get_status():
-    print('Welcome to the WGUPS Delivery Simulator! Today is ' + str(datetime.date.today()))
     user_time = input('Enter a time (HH:MM:SS) after 8:00:00. \n'
                       'For example, 9 AM is 9:00:00, and 1 PM is 13:00:00. \n'
                       'Time: ')
@@ -351,5 +347,3 @@ def get_menu(delta_user):
     if menu_selection == 'Exit':
         print('Thank you for using the WGUPS Delivery Simulator. Goodbye!')
         exit()
-
-get_status()
