@@ -27,7 +27,9 @@ with open('./csv_files/packages.csv') as packages:
         departure_time = datetime.timedelta(hours=8, minutes=0, seconds=0)
         delivered_time = datetime.timedelta(hours=17, minutes=0, seconds=0)
         on_time = ''
-        value = [id, address, city, state, zip, deadline, weight, status, note, departure_time, delivered_time, on_time]
+        truck_number = 0
+        value = [id, address, city, state, zip, deadline, weight, status, note, departure_time, delivered_time,
+                 on_time, truck_number]
         all_packages.add(key, value)
 
 
