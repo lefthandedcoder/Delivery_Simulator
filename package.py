@@ -7,9 +7,10 @@ with open('./csv_files/packages.csv') as packages:
     all_packages = HashTable()
     total_packages = 0
 
-    # Go through all rows in O(n)
+    # Goes through all rows in package file and pulls specific data, O(n)
     for row in read_packages:
         total_packages += 1
+        # Temporary solution, fixes wrong address. This may need to be fixed in future optimizations
         if 'Wrong' in row[7]:
             row[1] = "410 S State St"
             row[4] = "84111"
@@ -24,6 +25,7 @@ with open('./csv_files/packages.csv') as packages:
         weight = row[6]
         status = 'At hub'
         note = row[7]
+        # Sets departure/delivery times in timedelta to compare to user input
         departure_time = datetime.timedelta(hours=8, minutes=0, seconds=0)
         delivered_time = datetime.timedelta(hours=17, minutes=0, seconds=0)
         on_time = ''
@@ -33,9 +35,11 @@ with open('./csv_files/packages.csv') as packages:
         all_packages.add(key, value)
 
 
+# Gets count of all packages added to hash table, O(1)
 def get_total_packages():
     return total_packages
 
 
+# Gets hash table, O(1)
 def get_all_packages():
     return all_packages

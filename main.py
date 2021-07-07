@@ -1,3 +1,4 @@
+# Name: Christian Dye, WGU Student ID: 003130178
 import truck
 import datetime
 
@@ -20,6 +21,7 @@ truck.get_route(truck3.package_list, truck3.route)
 truck.get_shortest_path(truck3.route, truck3.optimized_route, 0)
 truck.truck3.total_distance = truck.get_distance(truck3.optimized_route, truck3.distance_list)
 print('Truck routes generated!')
+print('Truck paths optimized!')
 print('\n')
 truck.get_delivered_list(truck1.distance_list, truck1.depart_time, truck1.package_list)
 truck.get_delivered_list(truck2.distance_list, truck2.depart_time, truck2.package_list)
